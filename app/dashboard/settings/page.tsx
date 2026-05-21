@@ -47,14 +47,6 @@ function applyTheme(theme: Theme): void {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function SkeletonBlock({ width }: { width: string }) {
-  return (
-    <div
-      className={`h-[14px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse ${width}`}
-    />
-  );
-}
-
 interface ThemeRadioProps {
   option: ThemeOption;
   checked: boolean;
@@ -70,10 +62,10 @@ function ThemeRadio({ option, checked, groupName, onChange }: ThemeRadioProps) {
       htmlFor={inputId}
       title={option.tooltip}
       className={[
-        "relative flex items-center gap-[var(--qt-space-sm)] px-[var(--qt-space-md)] py-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] border cursor-pointer transition-colors duration-150 ease-out select-none",
+        "relative flex items-center gap-[var(--space-sm)] px-[var(--space-md)] py-[var(--space-sm)] rounded-[var(--radius-md)] border cursor-pointer transition-colors duration-150 ease-out select-none",
         checked
-          ? "border-[var(--qt-accent)] bg-[rgba(47,106,232,0.08)]"
-          : "border-[var(--qt-border)] bg-[var(--qt-surface-02)] hover:border-[var(--qt-text-muted)] hover:bg-[rgba(230,238,248,0.04)]",
+          ? "border-[var(--color-accent)] bg-[rgba(47,106,232,0.08)]"
+          : "border-[var(--color-border)] bg-[var(--color-surface-alt)] hover:border-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)]",
       ]
         .filter(Boolean)
         .join(" ")}
@@ -91,20 +83,20 @@ function ThemeRadio({ option, checked, groupName, onChange }: ThemeRadioProps) {
       <span
         className="flex-shrink-0 w-[16px] h-[16px] rounded-full border-[1.5px] flex items-center justify-center transition-colors duration-150 ease-out"
         style={{
-          borderColor: checked ? "var(--qt-accent)" : "var(--qt-text-muted)",
+          borderColor: checked ? "var(--color-accent)" : "var(--color-muted)",
         }}
         aria-hidden="true"
       >
         {checked && (
           <span
-            className="w-[8px] h-[8px] rounded-full bg-[var(--qt-accent)]"
+            className="w-[8px] h-[8px] rounded-full bg-[var(--color-accent)]"
           />
         )}
       </span>
       <span
         className={[
-          "text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] font-medium font-[family-name:var(--font-ui)] transition-colors duration-150 ease-out",
-          checked ? "text-[var(--qt-text-primary)]" : "text-[var(--qt-text-muted)]",
+          "text-[14px] leading-[20px] font-medium font-[family-name:var(--font-ui)] transition-colors duration-150 ease-out",
+          checked ? "text-[var(--color-text)]" : "text-[var(--color-muted)]",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -123,6 +115,11 @@ export default function SettingsPage() {
   const [showSaved, setShowSaved] = useState(false);
   const savedTimerRef = { current: null as ReturnType<typeof setTimeout> | null };
   const groupName = useId();
+
+  // Set document title
+  useEffect(() => {
+    document.title = "Settings — QuickTask";
+  }, []);
 
   // Hydrate from localStorage on mount
   useEffect(() => {
@@ -171,11 +168,11 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mb-[var(--qt-space-xl)]"
+          className="mb-[var(--space-xl)]"
         >
           <h1
             id="settings-heading"
-            className="text-[length:var(--qt-type-h1-size)] leading-[var(--qt-type-h1-line)] font-bold text-[var(--qt-text-primary)] font-[family-name:var(--font-display)]"
+            className="text-[28px] leading-[36px] font-bold text-[var(--color-text)] font-[family-name:var(--font-display)]"
           >
             Settings
           </h1>
@@ -186,13 +183,13 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-          className="rounded-[var(--qt-radius-lg)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] overflow-hidden"
+          className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden"
         >
-          <div className="px-[var(--qt-space-lg)] py-[var(--qt-space-lg)] border-b border-[var(--qt-border)]">
+          <div className="px-[var(--space-lg)] py-[var(--space-lg)] border-b border-[var(--color-border)]">
             <div className="flex items-center justify-between">
               <h2
                 id="theme-section-heading"
-                className="text-[length:var(--qt-type-h2-size)] leading-[var(--qt-type-h2-line)] font-semibold text-[var(--qt-text-primary)] font-[family-name:var(--font-display)]"
+                className="text-[20px] leading-[28px] font-semibold text-[var(--color-text)] font-[family-name:var(--font-display)]"
               >
                 Theme
               </h2>
@@ -206,7 +203,7 @@ export default function SettingsPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.92 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] font-medium text-[var(--qt-status-done)] font-[family-name:var(--font-ui)]"
+                    className="text-[12px] leading-[16px] font-medium text-[var(--color-done)] font-[family-name:var(--font-ui)]"
                     aria-hidden="true"
                   >
                     Saved
@@ -215,25 +212,25 @@ export default function SettingsPage() {
               </AnimatePresence>
             </div>
 
-            <p className="mt-[var(--qt-space-xxs)] text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)]">
+            <p className="mt-[var(--space-xxs)] text-[12px] leading-[16px] text-[var(--color-muted)] font-[family-name:var(--font-ui)]">
               Choose an app theme. Preference saves locally.
             </p>
           </div>
 
           <div
-            className="px-[var(--qt-space-lg)] py-[var(--qt-space-lg)]"
+            className="px-[var(--space-lg)] py-[var(--space-lg)]"
             aria-labelledby="theme-section-heading"
           >
             {loading ? (
               <div
                 aria-busy="true"
                 aria-label="Loading theme settings"
-                className="flex flex-col sm:flex-row gap-[var(--qt-space-sm)]"
+                className="flex flex-col sm:flex-row gap-[var(--space-sm)]"
               >
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex-1 h-[48px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-02)] animate-pulse"
+                    className="flex-1 h-[48px] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-alt)] animate-pulse"
                   />
                 ))}
               </div>
@@ -243,7 +240,7 @@ export default function SettingsPage() {
                 aria-labelledby="theme-section-heading"
               >
                 <legend className="sr-only">Theme</legend>
-                <div className="flex flex-col sm:flex-row gap-[var(--qt-space-sm)]">
+                <div className="flex flex-col sm:flex-row gap-[var(--space-sm)]">
                   {THEME_OPTIONS.map((option) => (
                     <div key={option.value} className="flex-1">
                       <ThemeRadio

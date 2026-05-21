@@ -22,13 +22,20 @@
   --qt-danger: #EF4444;
   --qt-shadow-modal: rgba(0, 0, 0, 0.6);
 
-  /* Aliases used by shared components */
-  --color-primary: #E6EEF8;
-  --color-accent: #2F6AE8;
+  /* ── Semantic aliases (used by sidebar, settings, shared components) ── */
   --color-bg: #0F1720;
+  --color-surface: #111420;
+  --color-surface-alt: #0D1114;
+  --color-border: #1F2933;
   --color-text: #E6EEF8;
   --color-muted: #9AA6B2;
-  --color-border: #1F2933;
+  --color-accent: #2F6AE8;
+  --color-accent-on: #FFFFFF;
+  --color-primary: #E6EEF8;
+  --color-todo: #F59E0B;
+  --color-inprogress: #2F6AE8;
+  --color-done: #10B981;
+  --color-danger: #EF4444;
 
   /* Typography */
   --font-display: "GT America", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
@@ -54,7 +61,14 @@
   --qt-space-xl: 32px;
   --qt-space-xxl: 48px;
 
-  /* Legacy spacing alias */
+  /* Spacing aliases (no qt- prefix, used by task spec) */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
   --space-base: 8px;
 
   /* Radii */
@@ -63,10 +77,11 @@
   --qt-radius-lg: 8px;
   --qt-radius-modal: 10px;
 
-  /* Legacy radius aliases */
+  /* Radius aliases (no qt- prefix) */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
+  --radius-modal: 10px;
 
   /* Stroke */
   --qt-stroke: 1px solid var(--qt-border);

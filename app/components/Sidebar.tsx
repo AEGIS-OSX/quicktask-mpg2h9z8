@@ -4,37 +4,18 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, CheckSquare, Settings } from "lucide-react";
+import {
+  LayoutDashboard,
+  CheckSquare,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
-}
-
-function CollapseIcon({ collapsed }: { collapsed: boolean }) {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 14 14"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-      style={{
-        transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
-        transition: "transform 200ms ease-out",
-      }}
-    >
-      <path
-        d="M9 2L4 7l5 5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -60,19 +41,20 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
   const pathname = usePathname();
 
   const sidebarWidth = collapsed ? 48 : 240;
+  const collapseLabel = collapsed ? "Expand sidebar" : "Collapse sidebar";
 
   return (
     <motion.nav
       aria-label="Main navigation"
       initial={false}
       animate={{ width: sidebarWidth }}
-      transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--qt-border)] bg-[var(--qt-surface-01)]"
+      transition={{ duration: 0.2, ease: [0.0, 0.0, 0.2, 1] }}
+      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)]"
       style={{ minWidth: collapsed ? "48px" : "240px" }}
     >
       {/* Top: App name / logo */}
       <div
-        className="flex items-center h-[52px] px-[var(--qt-space-md)] border-b border-[var(--qt-border)] flex-shrink-0"
+        className="flex items-center h-[52px] px-[var(--space-md)] border-b border-[var(--color-border)] flex-shrink-0"
       >
         <AnimatePresence initial={false}>
           {!collapsed && (
@@ -82,7 +64,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--qt-text-primary)] whitespace-nowrap overflow-hidden"
+              className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--color-text)] whitespace-nowrap overflow-hidden"
             >
               QuickTask
             </motion.span>
@@ -90,7 +72,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
         </AnimatePresence>
         {collapsed && (
           <span
-            className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--qt-text-primary)] select-none"
+            className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--color-text)] select-none"
             aria-hidden="true"
           >
             Q
@@ -99,7 +81,10 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
       </div>
 
       {/* Nav items */}
-      <ul className="flex flex-col gap-[2px] px-[var(--qt-space-xs)] py-[var(--qt-space-sm)] flex-1" role="list">
+      <ul
+        className="flex flex-col gap-[2px] px-[var(--space-xs)] py-[var(--space-sm)] flex-1"
+        role="list"
+      >
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/dashboard"
@@ -113,16 +98,24 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 aria-current={isActive ? "page" : undefined}
                 title={collapsed ? item.label : undefined}
                 className={[
-                  "flex items-center gap-[var(--qt-space-sm)] h-[32px] rounded-[var(--qt-radius-md)] px-[var(--qt-space-sm)] text-[14px] font-medium leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-bg-00)]",
+                  "flex items-center gap-[var(--space-xs)] rounded-[var(--radius-md)] px-[var(--space-sm)] text-[14px] font-medium leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
+                  "h-[32px]",
                   isActive
-                    ? "bg-[var(--qt-accent)] text-[var(--qt-accent-on)]"
-                    : "text-[var(--qt-text-muted)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)]",
-                  collapsed ? "justify-center px-0" : "",
+                    ? "bg-[rgba(47,106,232,0.10)] border-l-[3px] border-l-[var(--color-accent)] text-[var(--color-text)]"
+                    : "text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)] border-l-[3px] border-l-transparent",
+                  collapsed ? "justify-center px-0 border-l-0" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
-                <span className="flex-shrink-0 flex items-center justify-center w-[16px] h-[16px]">
+                <span
+                  className={[
+                    "flex-shrink-0 flex items-center justify-center w-[16px] h-[16px]",
+                    isActive ? "text-[var(--color-accent)]" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
                   {item.icon}
                 </span>
                 <AnimatePresence initial={false}>
@@ -146,15 +139,19 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
       </ul>
 
       {/* Collapse toggle */}
-      <div className="flex-shrink-0 px-[var(--qt-space-xs)] pb-[var(--qt-space-sm)]">
+      <div className="flex-shrink-0 px-[var(--space-xs)] pb-[var(--space-sm)]">
         <button
           type="button"
           onClick={() => setCollapsed((prev) => !prev)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex items-center justify-center w-full h-[32px] rounded-[var(--qt-radius-md)] text-[var(--qt-text-muted)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-bg-00)]"
+          aria-label={collapseLabel}
+          title={collapseLabel}
+          className="flex items-center justify-center w-full h-[32px] rounded-[var(--radius-md)] text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)] hover:text-[var(--color-text)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]"
         >
-          <CollapseIcon collapsed={collapsed} />
+          {collapsed ? (
+            <ChevronRight size={14} aria-hidden />
+          ) : (
+            <ChevronLeft size={14} aria-hidden />
+          )}
           <AnimatePresence initial={false}>
             {!collapsed && (
               <motion.span
@@ -163,7 +160,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="ml-[var(--qt-space-sm)] text-[12px] font-medium leading-none overflow-hidden whitespace-nowrap font-[family-name:var(--font-ui)]"
+                className="ml-[var(--space-sm)] text-[12px] font-medium leading-none overflow-hidden whitespace-nowrap font-[family-name:var(--font-ui)]"
               >
                 Collapse sidebar
               </motion.span>
