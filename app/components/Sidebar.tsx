@@ -96,22 +96,24 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 aria-current={isActive ? "page" : undefined}
                 title={collapsed ? item.label : undefined}
                 className={[
-                  "flex items-center gap-[var(--space-xs)] py-[var(--space-xs)] rounded-[var(--radius-md)] text-[14px] font-normal leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
+                  "relative flex items-center gap-[var(--space-xs)] py-[var(--space-xs)] rounded-[var(--radius-md)] text-[14px] font-normal leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
                   collapsed
                     ? "justify-center px-0 w-[48px]"
+                    : isActive
+                    ? "pl-[calc(var(--space-sm)-3px)] pr-[var(--space-sm)]"
                     : "px-[var(--space-sm)]",
                   isActive
                     ? "bg-[rgba(47,106,232,0.10)] border-l-[3px] border-l-[var(--color-accent)] text-[var(--color-text)]"
-                    : "text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)]",
+                    : "border-l-[3px] border-l-transparent text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)] hover:text-[var(--color-text)]",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
-                {/* Icon — accent color when active, muted otherwise */}
+                {/* Icon — accent color when active, muted otherwise (inherited) */}
                 <span
                   className={[
-                    "flex-shrink-0 flex items-center justify-center w-[16px] h-[16px]",
-                    isActive ? "text-[var(--color-accent)]" : "",
+                    "flex-shrink-0 flex items-center justify-center w-[16px] h-[16px] transition-colors duration-150 ease-out",
+                    isActive ? "text-[var(--color-accent)]" : "text-[var(--color-muted)]",
                   ]
                     .filter(Boolean)
                     .join(" ")}
@@ -154,7 +156,6 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
             .filter(Boolean)
             .join(" ")}
         >
-          {/* ChevronLeft (left-arrow) when expanded; ChevronRight (right-arrow) when collapsed */}
           {collapsed ? (
             <ChevronRight size={14} aria-hidden />
           ) : (
