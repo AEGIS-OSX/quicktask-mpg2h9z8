@@ -4,29 +4,12 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { LayoutDashboard } from "lucide-react";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
-}
-
-function DashboardIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.9" />
-      <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.9" />
-      <rect x="1" y="9" width="6" height="6" rx="1" fill="currentColor" opacity="0.9" />
-      <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity="0.9" />
-    </svg>
-  );
 }
 
 function TasksIcon() {
@@ -96,7 +79,11 @@ function CollapseIcon({ collapsed }: { collapsed: boolean }) {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: <DashboardIcon /> },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: <LayoutDashboard size={16} aria-hidden />,
+  },
   { href: "/dashboard/tasks", label: "Tasks", icon: <TasksIcon /> },
   { href: "/dashboard/settings", label: "Settings", icon: <SettingsIcon /> },
 ];
