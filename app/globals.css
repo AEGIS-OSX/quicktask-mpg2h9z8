@@ -1,30 +1,122 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* ── QuickTask design tokens (Ivy) ── */
+
+  /* Color palette */
+  --qt-bg-00: #0F1720;
+  --qt-surface-01: #111420;
+  --qt-surface-02: #0D1114;
+  --qt-border: #1F2933;
+  --qt-text-primary: #E6EEF8;
+  --qt-text-muted: #9AA6B2;
+  --qt-accent: #2F6AE8;
+  --qt-accent-on: #FFFFFF;
+  --qt-status-todo: #F59E0B;
+  --qt-status-inprogress: #2F6AE8;
+  --qt-status-done: #10B981;
+  --qt-danger: #EF4444;
+  --qt-shadow-modal: rgba(0, 0, 0, 0.6);
+
+  /* Aliases used by shared components */
   --color-primary: #E6EEF8;
   --color-accent: #2F6AE8;
-  --color-bg: #111420;
+  --color-bg: #0F1720;
   --color-text: #E6EEF8;
   --color-muted: #9AA6B2;
   --color-border: #1F2933;
+
+  /* Typography */
+  --font-display: "GT America", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
+  --font-ui: "Geist", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
+
+  --qt-type-h1-size: 28px;
+  --qt-type-h1-line: 36px;
+  --qt-type-h2-size: 20px;
+  --qt-type-h2-line: 28px;
+  --qt-type-h3-size: 16px;
+  --qt-type-h3-line: 22px;
+  --qt-type-body-size: 14px;
+  --qt-type-body-line: 20px;
+  --qt-type-sm-size: 12px;
+  --qt-type-sm-line: 16px;
+
+  /* Spacing (4px base grid) */
+  --qt-space-xxs: 4px;
+  --qt-space-xs: 8px;
+  --qt-space-sm: 12px;
+  --qt-space-md: 16px;
+  --qt-space-lg: 24px;
+  --qt-space-xl: 32px;
+  --qt-space-xxl: 48px;
+
+  /* Legacy spacing alias */
   --space-base: 8px;
+
+  /* Radii */
+  --qt-radius-sm: 4px;
+  --qt-radius-md: 6px;
+  --qt-radius-lg: 8px;
+  --qt-radius-modal: 10px;
+
+  /* Legacy radius aliases */
   --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
-  --font-display: 'Inter', Georgia, serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Stroke */
+  --qt-stroke: 1px solid var(--qt-border);
+
+  /* Breakpoints (reference only — use Tailwind md: lg: etc.) */
+  --qt-breakpoint-sm: 480px;
+  --qt-breakpoint-md: 768px;
+  --qt-breakpoint-lg: 1024px;
+  --qt-breakpoint-xl: 1280px;
 }
 
-html, body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-body);
+html,
+body {
+  background: var(--qt-bg-00);
+  color: var(--qt-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--qt-type-body-size);
+  line-height: var(--qt-type-body-line);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Visible focus ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--qt-accent);
+  outline-offset: 2px;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
