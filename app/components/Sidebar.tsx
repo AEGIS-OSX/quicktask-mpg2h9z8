@@ -4,53 +4,12 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, CheckSquare, Settings } from "lucide-react";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
-}
-
-function TasksIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path
-        d="M2 4h12M2 8h8M2 12h10"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function SettingsIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 function CollapseIcon({ collapsed }: { collapsed: boolean }) {
@@ -84,8 +43,16 @@ const NAV_ITEMS: NavItem[] = [
     label: "Dashboard",
     icon: <LayoutDashboard size={16} aria-hidden />,
   },
-  { href: "/dashboard/tasks", label: "Tasks", icon: <TasksIcon /> },
-  { href: "/dashboard/settings", label: "Settings", icon: <SettingsIcon /> },
+  {
+    href: "/dashboard/tasks",
+    label: "Tasks",
+    icon: <CheckSquare size={16} aria-hidden />,
+  },
+  {
+    href: "/dashboard/settings",
+    label: "Settings",
+    icon: <Settings size={16} aria-hidden />,
+  },
 ];
 
 export function Sidebar({ items: _items }: { items?: NavItem[] }) {
@@ -100,12 +67,12 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
       initial={false}
       animate={{ width: sidebarWidth }}
       transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--qt-surface-01,var(--color-bg))]"
+      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--qt-border)] bg-[var(--qt-surface-01)]"
       style={{ minWidth: collapsed ? "48px" : "240px" }}
     >
       {/* Top: App name / logo */}
       <div
-        className="flex items-center h-[52px] px-[var(--qt-space-md,16px)] border-b border-[var(--color-border)] flex-shrink-0"
+        className="flex items-center h-[52px] px-[var(--qt-space-md)] border-b border-[var(--qt-border)] flex-shrink-0"
       >
         <AnimatePresence initial={false}>
           {!collapsed && (
@@ -115,7 +82,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -6 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--color-text)] whitespace-nowrap overflow-hidden"
+              className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--qt-text-primary)] whitespace-nowrap overflow-hidden"
             >
               QuickTask
             </motion.span>
@@ -123,7 +90,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
         </AnimatePresence>
         {collapsed && (
           <span
-            className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--color-text)] select-none"
+            className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--qt-text-primary)] select-none"
             aria-hidden="true"
           >
             Q
@@ -132,7 +99,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
       </div>
 
       {/* Nav items */}
-      <ul className="flex flex-col gap-[2px] px-[var(--qt-space-xs,8px)] py-[var(--qt-space-sm,12px)] flex-1" role="list">
+      <ul className="flex flex-col gap-[2px] px-[var(--qt-space-xs)] py-[var(--qt-space-sm)] flex-1" role="list">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/dashboard"
@@ -146,10 +113,10 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 aria-current={isActive ? "page" : undefined}
                 title={collapsed ? item.label : undefined}
                 className={[
-                  "flex items-center gap-[var(--qt-space-sm,12px)] h-[32px] rounded-[var(--qt-radius-md,6px)] px-[var(--qt-space-sm,12px)] text-[14px] font-medium leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
+                  "flex items-center gap-[var(--qt-space-sm)] h-[32px] rounded-[var(--qt-radius-md)] px-[var(--qt-space-sm)] text-[14px] font-medium leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-bg-00)]",
                   isActive
-                    ? "bg-[var(--color-accent)] text-[var(--qt-accent-on,#ffffff)]"
-                    : "text-[var(--color-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)]",
+                    ? "bg-[var(--qt-accent)] text-[var(--qt-accent-on)]"
+                    : "text-[var(--qt-text-muted)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)]",
                   collapsed ? "justify-center px-0" : "",
                 ]
                   .filter(Boolean)
@@ -166,7 +133,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                       animate={{ opacity: 1, width: "auto" }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="overflow-hidden whitespace-nowrap font-[family-name:var(--font-ui,var(--font-display))]"
+                      className="overflow-hidden whitespace-nowrap font-[family-name:var(--font-ui)]"
                     >
                       {item.label}
                     </motion.span>
@@ -179,13 +146,13 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
       </ul>
 
       {/* Collapse toggle */}
-      <div className="flex-shrink-0 px-[var(--qt-space-xs,8px)] pb-[var(--qt-space-sm,12px)]">
+      <div className="flex-shrink-0 px-[var(--qt-space-xs)] pb-[var(--qt-space-sm)]">
         <button
           type="button"
           onClick={() => setCollapsed((prev) => !prev)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="flex items-center justify-center w-full h-[32px] rounded-[var(--qt-radius-md,6px)] text-[var(--color-muted)] hover:bg-[var(--color-border)] hover:text-[var(--color-text)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]"
+          className="flex items-center justify-center w-full h-[32px] rounded-[var(--qt-radius-md)] text-[var(--qt-text-muted)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-bg-00)]"
         >
           <CollapseIcon collapsed={collapsed} />
           <AnimatePresence initial={false}>
@@ -196,7 +163,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 animate={{ opacity: 1, width: "auto" }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="ml-[var(--qt-space-sm,12px)] text-[12px] font-medium leading-none overflow-hidden whitespace-nowrap font-[family-name:var(--font-ui,var(--font-display))]"
+                className="ml-[var(--qt-space-sm)] text-[12px] font-medium leading-none overflow-hidden whitespace-nowrap font-[family-name:var(--font-ui)]"
               >
                 Collapse sidebar
               </motion.span>
