@@ -666,8 +666,7 @@ export default function TasksPage() {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tasks by title"
-              title="Search tasks"
+              placeholder="Search tasks"
               className="w-full h-[32px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] pl-[28px] pr-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] placeholder:text-[var(--qt-text-muted)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out"
             />
           </div>
