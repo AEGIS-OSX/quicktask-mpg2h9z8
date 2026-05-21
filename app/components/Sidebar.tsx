@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
   CheckSquare,
@@ -41,21 +41,19 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
   const pathname = usePathname();
 
   const sidebarWidth = collapsed ? 48 : 240;
-  const collapseLabel = collapsed ? "Expand sidebar" : "Collapse sidebar";
 
   return (
-    <motion.nav
+    <nav
       aria-label="Main navigation"
-      initial={false}
-      animate={{ width: sidebarWidth }}
-      transition={{ duration: 0.2, ease: [0.0, 0.0, 0.2, 1] }}
-      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)]"
-      style={{ minWidth: collapsed ? "48px" : "240px" }}
+      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)] motion-reduce:transition-none"
+      style={{
+        width: sidebarWidth,
+        minWidth: sidebarWidth,
+        transition: "width 200ms ease-out",
+      }}
     >
       {/* Top: App name / logo */}
-      <div
-        className="flex items-center h-[52px] px-[var(--space-md)] border-b border-[var(--color-border)] flex-shrink-0"
-      >
+      <div className="flex items-center h-[52px] px-[var(--space-md)] border-b border-[var(--color-border)] flex-shrink-0">
         <AnimatePresence initial={false}>
           {!collapsed && (
             <motion.span
@@ -98,16 +96,18 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 aria-current={isActive ? "page" : undefined}
                 title={collapsed ? item.label : undefined}
                 className={[
-                  "flex items-center gap-[var(--space-xs)] rounded-[var(--radius-md)] px-[var(--space-sm)] text-[14px] font-medium leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
-                  "h-[32px]",
+                  "flex items-center gap-[var(--space-xs)] py-[var(--space-xs)] rounded-[var(--radius-md)] text-[14px] font-normal leading-none transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
+                  collapsed
+                    ? "justify-center px-0 w-[48px]"
+                    : "px-[var(--space-sm)]",
                   isActive
                     ? "bg-[rgba(47,106,232,0.10)] border-l-[3px] border-l-[var(--color-accent)] text-[var(--color-text)]"
-                    : "text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)] border-l-[3px] border-l-transparent",
-                  collapsed ? "justify-center px-0 border-l-0" : "",
+                    : "text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)]",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
+                {/* Icon — accent color when active, muted otherwise */}
                 <span
                   className={[
                     "flex-shrink-0 flex items-center justify-center w-[16px] h-[16px]",
@@ -118,6 +118,8 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                 >
                   {item.icon}
                 </span>
+
+                {/* Label — hidden when collapsed */}
                 <AnimatePresence initial={false}>
                   {!collapsed && (
                     <motion.span
@@ -143,15 +145,22 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
         <button
           type="button"
           onClick={() => setCollapsed((prev) => !prev)}
-          aria-label={collapseLabel}
-          title={collapseLabel}
-          className="flex items-center justify-center w-full h-[32px] rounded-[var(--radius-md)] text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)] hover:text-[var(--color-text)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={[
+            "flex items-center h-[32px] rounded-[var(--radius-md)] text-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)] hover:text-[var(--color-text)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg)]",
+            collapsed ? "justify-center w-[48px] px-0" : "w-full px-[var(--space-sm)]",
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
+          {/* ChevronLeft (left-arrow) when expanded; ChevronRight (right-arrow) when collapsed */}
           {collapsed ? (
             <ChevronRight size={14} aria-hidden />
           ) : (
             <ChevronLeft size={14} aria-hidden />
           )}
+
           <AnimatePresence initial={false}>
             {!collapsed && (
               <motion.span
@@ -168,6 +177,6 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
           </AnimatePresence>
         </button>
       </div>
-    </motion.nav>
+    </nav>
   );
 }

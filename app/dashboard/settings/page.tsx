@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useId } from "react";
+import { useState, useEffect, useCallback, useId, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -61,14 +61,7 @@ function ThemeRadio({ option, checked, groupName, onChange }: ThemeRadioProps) {
     <label
       htmlFor={inputId}
       title={option.tooltip}
-      className={[
-        "relative flex items-center gap-[var(--space-sm)] px-[var(--space-md)] py-[var(--space-sm)] rounded-[var(--radius-md)] border cursor-pointer transition-colors duration-150 ease-out select-none",
-        checked
-          ? "border-[var(--color-accent)] bg-[rgba(47,106,232,0.08)]"
-          : "border-[var(--color-border)] bg-[var(--color-surface-alt)] hover:border-[var(--color-muted)] hover:bg-[rgba(230,238,248,0.04)]",
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className="relative flex items-center gap-[var(--space-sm)] cursor-pointer select-none"
     >
       <input
         id={inputId}
@@ -81,21 +74,28 @@ function ThemeRadio({ option, checked, groupName, onChange }: ThemeRadioProps) {
       />
       {/* Custom radio indicator */}
       <span
-        className="flex-shrink-0 w-[16px] h-[16px] rounded-full border-[1.5px] flex items-center justify-center transition-colors duration-150 ease-out"
-        style={{
-          borderColor: checked ? "var(--color-accent)" : "var(--color-muted)",
-        }}
+        className={[
+          "flex-shrink-0 w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors duration-150 ease-out",
+          checked
+            ? "border-[var(--color-accent)]"
+            : "border-[var(--color-border)]",
+        ]
+          .filter(Boolean)
+          .join(" ")}
         aria-hidden="true"
       >
-        {checked && (
-          <span
-            className="w-[8px] h-[8px] rounded-full bg-[var(--color-accent)]"
-          />
-        )}
+        <span
+          className={[
+            "w-[8px] h-[8px] rounded-full bg-[var(--color-accent)] transition-opacity duration-150",
+            checked ? "opacity-100" : "opacity-0",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        />
       </span>
       <span
         className={[
-          "text-[14px] leading-[20px] font-medium font-[family-name:var(--font-ui)] transition-colors duration-150 ease-out",
+          "text-[14px] leading-[20px] font-[family-name:var(--font-ui)] transition-colors duration-150 ease-out",
           checked ? "text-[var(--color-text)]" : "text-[var(--color-muted)]",
         ]
           .filter(Boolean)
@@ -113,7 +113,8 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState<Theme>("system");
   const [loading, setLoading] = useState(true);
   const [showSaved, setShowSaved] = useState(false);
-  const savedTimerRef = { current: null as ReturnType<typeof setTimeout> | null };
+  // useRef so the timer handle persists across renders without causing re-renders
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const groupName = useId();
 
   // Set document title
@@ -136,7 +137,7 @@ export default function SettingsPage() {
       window.localStorage.setItem(STORAGE_KEY, value);
       applyTheme(value);
 
-      // Show "Saved" feedback for 2s
+      // Show "Saved" feedback for 2s; clear any pending timer first
       if (savedTimerRef.current !== null) {
         clearTimeout(savedTimerRef.current);
       }
@@ -146,7 +147,6 @@ export default function SettingsPage() {
         savedTimerRef.current = null;
       }, SAVED_DURATION_MS);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
@@ -183,78 +183,66 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-          className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden"
         >
-          <div className="px-[var(--space-lg)] py-[var(--space-lg)] border-b border-[var(--color-border)]">
-            <div className="flex items-center justify-between">
-              <h2
-                id="theme-section-heading"
-                className="text-[20px] leading-[28px] font-semibold text-[var(--color-text)] font-[family-name:var(--font-display)]"
-              >
-                Theme
-              </h2>
+          <div className="flex items-center justify-between mb-[var(--space-xs)]">
+            <h2
+              id="theme-section-heading"
+              className="text-[20px] leading-[28px] font-semibold text-[var(--color-text)] font-[family-name:var(--font-display)]"
+            >
+              Theme
+            </h2>
 
-              {/* Saved feedback */}
-              <AnimatePresence>
-                {showSaved && (
-                  <motion.span
-                    key="saved-badge"
-                    initial={{ opacity: 0, scale: 0.92 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.92 }}
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="text-[12px] leading-[16px] font-medium text-[var(--color-done)] font-[family-name:var(--font-ui)]"
-                    aria-hidden="true"
-                  >
-                    Saved
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <p className="mt-[var(--space-xxs)] text-[12px] leading-[16px] text-[var(--color-muted)] font-[family-name:var(--font-ui)]">
-              Choose an app theme. Preference saves locally.
-            </p>
+            {/* Saved feedback — inline, 2s */}
+            <AnimatePresence>
+              {showSaved && (
+                <motion.span
+                  key="saved-badge"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="text-[12px] leading-[16px] font-medium text-[var(--color-done)] font-[family-name:var(--font-ui)]"
+                  aria-hidden="true"
+                >
+                  Saved
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div
-            className="px-[var(--space-lg)] py-[var(--space-lg)]"
-            aria-labelledby="theme-section-heading"
-          >
-            {loading ? (
-              <div
-                aria-busy="true"
-                aria-label="Loading theme settings"
-                className="flex flex-col sm:flex-row gap-[var(--space-sm)]"
-              >
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 h-[48px] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-alt)] animate-pulse"
+          <p className="text-[14px] leading-[20px] text-[var(--color-muted)] font-[family-name:var(--font-ui)] mb-[var(--space-lg)]">
+            Choose an app theme. Preference saves locally.
+          </p>
+
+          {loading ? (
+            <div
+              aria-busy="true"
+              aria-label="Loading theme settings"
+              className="flex flex-col gap-[var(--space-sm)]"
+            >
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[32px] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <fieldset className="border-0 p-0 m-0" aria-labelledby="theme-section-heading">
+              <legend className="sr-only">Theme</legend>
+              <div className="flex flex-col gap-[var(--space-sm)]">
+                {THEME_OPTIONS.map((option) => (
+                  <ThemeRadio
+                    key={option.value}
+                    option={option}
+                    checked={theme === option.value}
+                    groupName={groupName}
+                    onChange={handleThemeChange}
                   />
                 ))}
               </div>
-            ) : (
-              <fieldset
-                className="border-0 p-0 m-0"
-                aria-labelledby="theme-section-heading"
-              >
-                <legend className="sr-only">Theme</legend>
-                <div className="flex flex-col sm:flex-row gap-[var(--space-sm)]">
-                  {THEME_OPTIONS.map((option) => (
-                    <div key={option.value} className="flex-1">
-                      <ThemeRadio
-                        option={option}
-                        checked={theme === option.value}
-                        groupName={groupName}
-                        onChange={handleThemeChange}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </fieldset>
-            )}
-          </div>
+            </fieldset>
+          )}
         </motion.div>
       </section>
     </>
