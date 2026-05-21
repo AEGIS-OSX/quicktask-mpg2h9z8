@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useId } from "react";
-import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type TaskStatus = "todo" | "inprogress" | "done";
+type TaskStatus = "todo" | "in-progress" | "done";
 type FilterStatus = "all" | TaskStatus;
 
 interface Task {
@@ -26,10 +26,10 @@ interface Toast {
 
 const SEED_TASKS: Task[] = [
   { id: "t1", title: "Fix navigation bug", status: "done", createdAt: "2026-05-20" },
-  { id: "t2", title: "Write project brief", status: "inprogress", createdAt: "2026-05-20" },
+  { id: "t2", title: "Write project brief", status: "in-progress", createdAt: "2026-05-20" },
   { id: "t3", title: "Review pull request #42", status: "todo", createdAt: "2026-05-19" },
   { id: "t4", title: "Update onboarding copy", status: "todo", createdAt: "2026-05-19" },
-  { id: "t5", title: "Deploy staging environment", status: "inprogress", createdAt: "2026-05-18" },
+  { id: "t5", title: "Deploy staging environment", status: "in-progress", createdAt: "2026-05-18" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,18 +41,14 @@ function formatDate(iso: string): string {
 
 function statusLabel(status: TaskStatus): string {
   if (status === "todo") return "Todo";
-  if (status === "inprogress") return "In progress";
+  if (status === "in-progress") return "In progress";
   return "Done";
 }
 
 function statusColor(status: TaskStatus): string {
   if (status === "todo") return "var(--qt-status-todo)";
-  if (status === "inprogress") return "var(--qt-status-inprogress)";
+  if (status === "in-progress") return "var(--qt-status-inprogress)";
   return "var(--qt-status-done)";
-}
-
-function generateId(): string {
-  return `t${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
@@ -86,28 +82,100 @@ function SkeletonRow() {
         <div className="h-[12px] w-[55%] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse" />
       </td>
       <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
-        <div className="h-[20px] w-[80px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse" />
+        <div className="h-[20px] w-[72px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse" />
+      </td>
+      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] hidden sm:table-cell">
+        <div className="h-[12px] w-[80px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse" />
       </td>
       <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
-        <div className="h-[12px] w-[90px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse" />
-      </td>
-      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
-        <div className="h-[12px] w-[60px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse ml-auto" />
+        <div className="h-[12px] w-[48px] rounded-[var(--qt-radius-sm)] bg-[var(--qt-surface-02)] animate-pulse ml-auto" />
       </td>
     </tr>
   );
 }
 
-// ── Create Task Modal ─────────────────────────────────────────────────────────
+// ── Delete Confirm Modal ──────────────────────────────────────────────────────
 
-interface CreateTaskModalProps {
+interface DeleteConfirmProps {
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function DeleteConfirmModal({ onConfirm, onCancel }: DeleteConfirmProps) {
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Escape") onCancel();
+    },
+    [onCancel]
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-[var(--qt-space-md)]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-modal-title"
+      onKeyDown={handleKeyDown}
+    >
+      <motion.div
+        className="absolute inset-0 bg-[var(--qt-shadow-modal)]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        onClick={onCancel}
+        aria-hidden="true"
+      />
+      <motion.div
+        className="relative z-10 w-full max-w-[400px] rounded-[var(--qt-radius-modal)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] shadow-[0_10px_30px_var(--qt-shadow-modal)] px-[var(--qt-space-lg)] py-[var(--qt-space-lg)]"
+        initial={{ opacity: 0, scale: 0.97, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 8 }}
+        transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
+      >
+        <h2
+          id="delete-modal-title"
+          className="text-[length:var(--qt-type-h2-size)] leading-[var(--qt-type-h2-line)] font-semibold text-[var(--qt-text-primary)] font-[family-name:var(--font-display)] mb-[var(--qt-space-sm)]"
+        >
+          Delete task
+        </h2>
+        <p className="text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] mb-[var(--qt-space-lg)]">
+          This will permanently remove the task. Are you sure?
+        </p>
+        <div className="flex items-center justify-end gap-[var(--qt-space-xs)]">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-[32px] px-[var(--qt-space-md)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-body-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-01)]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="h-[32px] px-[var(--qt-space-md)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-body-size)] leading-none font-semibold text-[var(--qt-accent-on)] bg-[var(--qt-danger)] font-[family-name:var(--font-ui)] hover:opacity-90 transition-opacity duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--qt-surface-01)]"
+          >
+            Delete task
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Create / Edit Task Modal ──────────────────────────────────────────────────
+
+interface TaskModalProps {
+  mode: "create" | "edit";
+  initialTitle?: string;
+  initialStatus?: TaskStatus;
   onClose: () => void;
   onSave: (title: string, status: TaskStatus) => void;
 }
 
-function CreateTaskModal({ onClose, onSave }: CreateTaskModalProps) {
-  const [title, setTitle] = useState("");
-  const [status, setStatus] = useState<TaskStatus>("todo");
+function TaskModal({ mode, initialTitle = "", initialStatus = "todo", onClose, onSave }: TaskModalProps) {
+  const [title, setTitle] = useState(initialTitle);
+  const [status, setStatus] = useState<TaskStatus>(initialStatus);
   const [error, setError] = useState("");
   const titleId = useId();
   const statusId = useId();
@@ -132,18 +200,19 @@ function CreateTaskModal({ onClose, onSave }: CreateTaskModalProps) {
     [onClose]
   );
 
+  const isEdit = mode === "edit";
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-[var(--qt-space-md)]"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="create-modal-title"
+      aria-labelledby="task-modal-title"
       onKeyDown={handleKeyDown}
     >
       {/* Backdrop */}
       <motion.div
-        className="absolute inset-0"
-        style={{ backgroundColor: "var(--qt-shadow-modal)" }}
+        className="absolute inset-0 bg-[var(--qt-shadow-modal)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -162,10 +231,10 @@ function CreateTaskModal({ onClose, onSave }: CreateTaskModalProps) {
       >
         <div className="px-[var(--qt-space-lg)] pt-[var(--qt-space-lg)] pb-[var(--qt-space-md)]">
           <h2
-            id="create-modal-title"
+            id="task-modal-title"
             className="text-[length:var(--qt-type-h2-size)] leading-[var(--qt-type-h2-line)] font-semibold text-[var(--qt-text-primary)] font-[family-name:var(--font-display)] mb-[var(--qt-space-lg)]"
           >
-            Create task
+            {isEdit ? "Edit task" : "Create task"}
           </h2>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -215,7 +284,7 @@ function CreateTaskModal({ onClose, onSave }: CreateTaskModalProps) {
                 className="w-full h-[36px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-02)] px-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out cursor-pointer"
               >
                 <option value="todo">Todo</option>
-                <option value="inprogress">In progress</option>
+                <option value="in-progress">In progress</option>
                 <option value="done">Done</option>
               </select>
             </div>
@@ -236,80 +305,6 @@ function CreateTaskModal({ onClose, onSave }: CreateTaskModalProps) {
               </button>
             </div>
           </form>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-// ── Delete Confirmation Modal ─────────────────────────────────────────────────
-
-interface DeleteModalProps {
-  taskTitle: string;
-  onClose: () => void;
-  onConfirm: () => void;
-}
-
-function DeleteModal({ taskTitle, onClose, onConfirm }: DeleteModalProps) {
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "Escape") onClose();
-    },
-    [onClose]
-  );
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-[var(--qt-space-md)]"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-modal-title"
-      onKeyDown={handleKeyDown}
-    >
-      <motion.div
-        className="absolute inset-0"
-        style={{ backgroundColor: "var(--qt-shadow-modal)" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <motion.div
-        className="relative z-10 w-full max-w-[400px] rounded-[var(--qt-radius-modal)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] shadow-[0_10px_30px_var(--qt-shadow-modal)] px-[var(--qt-space-lg)] pt-[var(--qt-space-lg)] pb-[var(--qt-space-md)]"
-        initial={{ opacity: 0, scale: 0.97, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 8 }}
-        transition={{ duration: 0.18, ease: [0.25, 0.1, 0.25, 1] }}
-      >
-        <h2
-          id="delete-modal-title"
-          className="text-[length:var(--qt-type-h2-size)] leading-[var(--qt-type-h2-line)] font-semibold text-[var(--qt-text-primary)] font-[family-name:var(--font-display)] mb-[var(--qt-space-sm)]"
-        >
-          Delete task
-        </h2>
-        <p className="text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] mb-[var(--qt-space-lg)]">
-          This will permanently remove the task. Are you sure?
-        </p>
-        <p className="text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] mb-[var(--qt-space-lg)] truncate">
-          &ldquo;{taskTitle}&rdquo;
-        </p>
-        <div className="flex items-center justify-end gap-[var(--qt-space-xs)]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-[32px] px-[var(--qt-space-md)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-body-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-01)]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="h-[32px] px-[var(--qt-space-md)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-body-size)] leading-none font-semibold text-[var(--qt-accent-on)] bg-[var(--qt-danger)] font-[family-name:var(--font-ui)] hover:opacity-90 transition-opacity duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-danger)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--qt-surface-01)]"
-          >
-            Delete
-          </button>
         </div>
       </motion.div>
     </div>
@@ -343,128 +338,36 @@ function ToastList({ toasts }: { toasts: Toast[] }) {
   );
 }
 
-// ── Inline Edit Row ───────────────────────────────────────────────────────────
-
-interface EditRowProps {
-  task: Task;
-  onSave: (id: string, title: string, status: TaskStatus) => void;
-  onCancel: () => void;
-}
-
-function EditRow({ task, onSave, onCancel }: EditRowProps) {
-  const [title, setTitle] = useState(task.title);
-  const [status, setStatus] = useState<TaskStatus>(task.status);
-  const [error, setError] = useState("");
-  const inputId = useId();
-
-  const handleSave = useCallback(() => {
-    const trimmed = title.trim();
-    if (!trimmed) {
-      setError("Title is required.");
-      return;
-    }
-    onSave(task.id, trimmed, status);
-  }, [title, status, task.id, onSave]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") handleSave();
-      if (e.key === "Escape") onCancel();
-    },
-    [handleSave, onCancel]
-  );
-
-  return (
-    <tr className="border-b border-[var(--qt-border)] last:border-b-0 bg-[var(--qt-surface-02)]">
-      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]" colSpan={2}>
-        <div className="flex items-center gap-[var(--qt-space-sm)]">
-          <input
-            id={inputId}
-            type="text"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              if (error) setError("");
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Task title"
-            autoFocus
-            className="flex-1 h-[30px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] px-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] placeholder:text-[var(--qt-text-muted)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out"
-            aria-label="Task title"
-            aria-invalid={error ? "true" : undefined}
-          />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as TaskStatus)}
-            className="h-[30px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] px-[var(--qt-space-xs)] text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out cursor-pointer"
-            aria-label="Task status"
-          >
-            <option value="todo">Todo</option>
-            <option value="inprogress">In progress</option>
-            <option value="done">Done</option>
-          </select>
-        </div>
-        {error && (
-          <p
-            role="alert"
-            className="mt-[var(--qt-space-xxs)] text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-danger)] font-[family-name:var(--font-ui)]"
-          >
-            {error}
-          </p>
-        )}
-      </td>
-      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] tabular-nums whitespace-nowrap">
-        {formatDate(task.createdAt)}
-      </td>
-      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
-        <div className="flex items-center justify-end gap-[var(--qt-space-xs)]">
-          <button
-            type="button"
-            onClick={handleSave}
-            className="h-[26px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-semibold text-[var(--qt-accent-on)] bg-[var(--qt-accent)] font-[family-name:var(--font-ui)] hover:opacity-90 transition-opacity duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-02)]"
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-[26px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-02)]"
-          >
-            Cancel
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TasksPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [tasks, setTasks] = useState<Task[]>(SEED_TASKS);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>(
+    () => (searchParams.get("status") as FilterStatus) ?? "all"
+  );
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  // Initialise filter from URL param (?status=todo|inprogress|done)
-  useEffect(() => {
-    const param = searchParams.get("status");
-    if (param === "todo" || param === "inprogress" || param === "done") {
-      setFilterStatus(param);
-    }
-  }, [searchParams]);
 
   // Simulate brief load on mount
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(t);
   }, []);
+
+  // Sync filter status from URL param on mount
+  useEffect(() => {
+    const param = searchParams.get("status") as FilterStatus | null;
+    if (param && ["all", "todo", "in-progress", "done"].includes(param)) {
+      setFilterStatus(param);
+    }
+  }, [searchParams]);
 
   const addToast = useCallback((message: string, type: Toast["type"] = "success") => {
     const id = `toast-${Date.now()}`;
@@ -474,22 +377,34 @@ export default function TasksPage() {
     }, 3000);
   }, []);
 
-  // Derived: filtered + searched tasks
-  const visibleTasks = tasks.filter((task) => {
+  // ── Filtered tasks ──────────────────────────────────────────────────────────
+
+  const filteredTasks = tasks.filter((task) => {
     const matchesStatus = filterStatus === "all" || task.status === filterStatus;
-    const matchesSearch =
-      searchQuery.trim() === "" ||
-      task.title.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
-  const hasActiveFilters = filterStatus !== "all" || searchQuery.trim() !== "";
+  // ── Handlers ────────────────────────────────────────────────────────────────
 
-  // Handlers
+  const handleFilterChange = useCallback(
+    (status: FilterStatus) => {
+      setFilterStatus(status);
+      const params = new URLSearchParams(searchParams.toString());
+      if (status === "all") {
+        params.delete("status");
+      } else {
+        params.set("status", status);
+      }
+      router.replace(`/dashboard/tasks${params.toString() ? `?${params.toString()}` : ""}`);
+    },
+    [searchParams, router]
+  );
+
   const handleCreateTask = useCallback(
     (title: string, status: TaskStatus) => {
       const newTask: Task = {
-        id: generateId(),
+        id: `t${Date.now()}`,
         title,
         status,
         createdAt: new Date().toISOString().slice(0, 10),
@@ -501,32 +416,28 @@ export default function TasksPage() {
     [addToast]
   );
 
-  const handleEditSave = useCallback(
-    (id: string, title: string, status: TaskStatus) => {
+  const handleEditTask = useCallback(
+    (title: string, status: TaskStatus) => {
+      if (!editingTask) return;
       setTasks((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, title, status } : t))
+        prev.map((t) => (t.id === editingTask.id ? { ...t, title, status } : t))
       );
-      setEditingId(null);
+      setEditingTask(null);
       addToast("Saved");
     },
-    [addToast]
+    [editingTask, addToast]
   );
 
   const handleDeleteConfirm = useCallback(() => {
-    if (!deleteTarget) return;
-    setTasks((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    if (!deletingTaskId) return;
+    setTasks((prev) => prev.filter((t) => t.id !== deletingTaskId));
+    setDeletingTaskId(null);
     addToast("Task deleted");
-  }, [deleteTarget, addToast]);
-
-  const handleClearFilters = useCallback(() => {
-    setFilterStatus("all");
-    setSearchQuery("");
-  }, []);
+  }, [deletingTaskId, addToast]);
 
   return (
     <>
-      {/* Live region */}
+      {/* Live region for screen reader announcements */}
       <div aria-live="polite" aria-atomic="true" className="sr-only" id="tasks-live" />
 
       <section aria-labelledby="tasks-heading">
@@ -548,58 +459,46 @@ export default function TasksPage() {
           </button>
         </div>
 
-        {/* Filter controls */}
-        <div className="flex flex-wrap items-center gap-[var(--qt-space-sm)] mb-[var(--qt-space-md)]">
-          {/* Status filter */}
+        {/* Filter bar */}
+        <div className="flex flex-wrap items-center gap-[var(--qt-space-sm)] mb-[var(--qt-space-lg)]">
+          {/* Status dropdown */}
           <div className="flex items-center gap-[var(--qt-space-xs)]">
             <label
               htmlFor="status-filter"
-              className="text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] whitespace-nowrap"
+              className="text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] flex-shrink-0"
             >
               Status
             </label>
             <select
               id="status-filter"
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
+              onChange={(e) => handleFilterChange(e.target.value as FilterStatus)}
               className="h-[32px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] px-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out cursor-pointer"
             >
               <option value="all">All</option>
               <option value="todo">Todo</option>
-              <option value="inprogress">In progress</option>
+              <option value="in-progress">In progress</option>
               <option value="done">Done</option>
             </select>
           </div>
 
           {/* Search */}
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tasks"
-            aria-label="Search tasks"
-            className="h-[32px] min-w-[180px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] px-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] placeholder:text-[var(--qt-text-muted)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out"
-          />
-
-          {/* Clear filters */}
-          <AnimatePresence>
-            {hasActiveFilters && (
-              <motion.button
-                type="button"
-                onClick={handleClearFilters}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.12, ease: "easeOut" }}
-                className="h-[32px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] border border-[var(--qt-border)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-bg-00)]"
-              >
-                Clear filters
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <div className="flex-1 min-w-[160px] max-w-[280px] ml-auto">
+            <label htmlFor="tasks-search" className="sr-only">
+              Search tasks
+            </label>
+            <input
+              id="tasks-search"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search tasks"
+              className="w-full h-[32px] rounded-[var(--qt-radius-md)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] px-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] placeholder:text-[var(--qt-text-muted)] outline-none focus:border-[var(--qt-accent)] focus:ring-1 focus:ring-[var(--qt-accent)] transition-colors duration-150 ease-out"
+            />
+          </div>
         </div>
 
-        {/* Task table */}
+        {/* Table */}
         <div className="rounded-[var(--qt-radius-lg)] border border-[var(--qt-border)] bg-[var(--qt-surface-01)] overflow-hidden">
           <table className="w-full border-collapse" aria-label="Tasks">
             <thead>
@@ -618,7 +517,7 @@ export default function TasksPage() {
                 </th>
                 <th
                   scope="col"
-                  className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] text-left text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] font-semibold text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)]"
+                  className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] text-left text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] font-semibold text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] hidden sm:table-cell"
                 >
                   Created
                 </th>
@@ -637,12 +536,17 @@ export default function TasksPage() {
                     <SkeletonRow key={i} />
                   ))}
                 </>
-              ) : tasks.length === 0 ? (
+              ) : filteredTasks.length === 0 ? (
                 <tr>
                   <td colSpan={4}>
-                    <div className="flex flex-col items-center justify-center py-[var(--qt-space-xxl)] gap-[var(--qt-space-md)]">
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
+                      className="flex flex-col items-center justify-center py-[var(--qt-space-xxl)] gap-[var(--qt-space-md)]"
+                    >
                       <p className="text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)]">
-                        No tasks yet
+                        {tasks.length === 0 ? "No tasks yet" : "No tasks match this filter"}
                       </p>
                       <button
                         type="button"
@@ -651,77 +555,68 @@ export default function TasksPage() {
                       >
                         Add task
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ) : visibleTasks.length === 0 ? (
-                <tr>
-                  <td colSpan={4}>
-                    <div className="flex flex-col items-center justify-center py-[var(--qt-space-xxl)] gap-[var(--qt-space-md)]">
-                      <p className="text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)]">
-                        No tasks match this filter
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleClearFilters}
-                        className="h-[32px] px-[var(--qt-space-md)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-body-size)] leading-none font-semibold text-[var(--qt-accent-on)] bg-[var(--qt-accent)] font-[family-name:var(--font-ui)] hover:opacity-90 transition-opacity duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--qt-surface-01)]"
-                      >
-                        Add task
-                      </button>
-                    </div>
+                    </motion.div>
                   </td>
                 </tr>
               ) : (
                 <AnimatePresence initial={false}>
-                  {visibleTasks.map((task) =>
-                    editingId === task.id ? (
-                      <EditRow
-                        key={task.id}
-                        task={task}
-                        onSave={handleEditSave}
-                        onCancel={() => setEditingId(null)}
-                      />
-                    ) : (
-                      <motion.tr
-                        key={task.id}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -4 }}
-                        transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
-                        className="border-b border-[var(--qt-border)] last:border-b-0 group hover:bg-[var(--qt-surface-02)] transition-colors duration-100 ease-out"
-                      >
-                        <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] max-w-[320px] truncate">
+                  {filteredTasks.map((task, i) => (
+                    <motion.tr
+                      key={task.id}
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -6 }}
+                      transition={{
+                        duration: 0.18,
+                        ease: [0.25, 0.1, 0.25, 1],
+                        delay: i * 0.03,
+                      }}
+                      className="border-b border-[var(--qt-border)] last:border-b-0 group"
+                    >
+                      {/* Title */}
+                      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
+                        <span className="text-[length:var(--qt-type-body-size)] leading-[var(--qt-type-body-line)] text-[var(--qt-text-primary)] font-[family-name:var(--font-ui)] line-clamp-1">
                           {task.title}
-                        </td>
-                        <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
-                          <StatusBadge status={task.status} />
-                        </td>
-                        <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] tabular-nums whitespace-nowrap">
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
+                        <StatusBadge status={task.status} />
+                      </td>
+
+                      {/* Created */}
+                      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)] hidden sm:table-cell">
+                        <span className="text-[length:var(--qt-type-sm-size)] leading-[var(--qt-type-sm-line)] text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] tabular-nums">
                           {formatDate(task.createdAt)}
-                        </td>
-                        <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
-                          <div className="flex items-center justify-end gap-[var(--qt-space-xs)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150 ease-out">
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(task.id)}
-                              aria-label={`Edit task: ${task.title}`}
-                              className="h-[26px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-01)] focus-visible:opacity-100"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteTarget(task)}
-                              aria-label={`Delete task: ${task.title}`}
-                              className="h-[26px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-danger)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-danger)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-01)] focus-visible:opacity-100"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    )
-                  )}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-[var(--qt-space-md)] py-[var(--qt-space-sm)]">
+                        <div
+                          className="flex items-center justify-end gap-[var(--qt-space-xs)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150 ease-out"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setEditingTask(task)}
+                            aria-label={`Edit ${task.title}`}
+                            className="h-[28px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-medium text-[var(--qt-text-muted)] font-[family-name:var(--font-ui)] border border-[var(--qt-border)] hover:bg-[var(--qt-border)] hover:text-[var(--qt-text-primary)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-01)]"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingTaskId(task.id)}
+                            aria-label={`Delete ${task.title}`}
+                            className="h-[28px] px-[var(--qt-space-sm)] rounded-[var(--qt-radius-md)] text-[length:var(--qt-type-sm-size)] leading-none font-medium text-[var(--qt-danger)] font-[family-name:var(--font-ui)] border border-transparent hover:border-[var(--qt-danger)] hover:bg-[color-mix(in_srgb,var(--qt-danger)_12%,transparent)] transition-colors duration-150 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[var(--qt-danger)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--qt-surface-01)]"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
                 </AnimatePresence>
               )}
             </tbody>
@@ -732,20 +627,33 @@ export default function TasksPage() {
       {/* Create task modal */}
       <AnimatePresence>
         {showCreateModal && (
-          <CreateTaskModal
+          <TaskModal
+            mode="create"
             onClose={() => setShowCreateModal(false)}
             onSave={handleCreateTask}
           />
         )}
       </AnimatePresence>
 
-      {/* Delete confirmation modal */}
+      {/* Edit task modal */}
       <AnimatePresence>
-        {deleteTarget && (
-          <DeleteModal
-            taskTitle={deleteTarget.title}
-            onClose={() => setDeleteTarget(null)}
+        {editingTask && (
+          <TaskModal
+            mode="edit"
+            initialTitle={editingTask.title}
+            initialStatus={editingTask.status}
+            onClose={() => setEditingTask(null)}
+            onSave={handleEditTask}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirm modal */}
+      <AnimatePresence>
+        {deletingTaskId && (
+          <DeleteConfirmModal
             onConfirm={handleDeleteConfirm}
+            onCancel={() => setDeletingTaskId(null)}
           />
         )}
       </AnimatePresence>
