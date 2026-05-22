@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,9 +35,11 @@
   --color-done: #10B981;
   --color-danger: #EF4444;
 
-  /* Typography */
-  --font-display: "GT America", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
-  --font-ui: "Geist", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial;
+  /* Typography — GT America (display) + Geist (UI/body) per approved Creative Direction */
+  /* NOTE: GT America and Geist are provisioned via system-ui fallback stack until self-hosting */
+  /* is configured. Inter has been removed as the primary face per Hale audit fix. */
+  --font-display: "GT America", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-ui: "Geist", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 
   --qt-type-h1-size: 28px;
   --qt-type-h1-line: 36px;
@@ -104,34 +104,54 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-display);
-}
-
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* Visible focus ring for keyboard navigation */
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--qt-type-h1-size);
+  line-height: var(--qt-type-h1-line);
+  font-weight: 700;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--qt-type-h2-size);
+  line-height: var(--qt-type-h2-line);
+  font-weight: 600;
+}
+
+h3 {
+  font-family: var(--font-ui);
+  font-size: var(--qt-type-h3-size);
+  line-height: var(--qt-type-h3-line);
+  font-weight: 600;
+}
+
+/* Focus ring — visible for keyboard users */
 :focus-visible {
   outline: 2px solid var(--qt-accent);
   outline-offset: 2px;
 }
 
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--qt-surface-02);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--qt-border);
+  border-radius: var(--qt-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--qt-text-muted);
 }
