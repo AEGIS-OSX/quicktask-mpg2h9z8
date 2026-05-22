@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -36,9 +36,39 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+/** Breakpoint at which the sidebar defaults to expanded (matches --qt-breakpoint-md). */
+const EXPAND_BREAKPOINT = 768;
+
 export function Sidebar({ items: _items }: { items?: NavItem[] }) {
+  /**
+   * Default to false (expanded) for SSR — the server has no viewport.
+   * On the client, useEffect immediately corrects to the real viewport width:
+   * - < 768px  → collapsed (48px, mobile default)
+   * - >= 768px → expanded  (240px, desktop default)
+   */
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Set initial collapsed state based on actual viewport width.
+    setCollapsed(window.innerWidth < EXPAND_BREAKPOINT);
+
+    // When the viewport crosses the breakpoint, sync the sidebar state
+    // so it behaves correctly after orientation changes or window resizes.
+    function handleResize() {
+      setCollapsed((prev) => {
+        const shouldBeCollapsed = window.innerWidth < EXPAND_BREAKPOINT;
+        // Only auto-update when crossing the breakpoint boundary to avoid
+        // overriding a deliberate user toggle mid-session.
+        if (window.innerWidth < EXPAND_BREAKPOINT && !prev) return true;
+        if (window.innerWidth >= EXPAND_BREAKPOINT && prev) return false;
+        return prev;
+      });
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <motion.nav
