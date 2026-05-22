@@ -40,22 +40,30 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
-  const sidebarWidth = collapsed ? 48 : 240;
-
   return (
-    <nav
+    <motion.nav
       aria-label="Main navigation"
-      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)] motion-reduce:transition-none"
-      style={{
-        width: sidebarWidth,
-        minWidth: sidebarWidth,
-        transition: "width 200ms ease-out",
-      }}
+      initial={false}
+      animate={{ width: collapsed ? 48 : 240 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="relative flex-shrink-0 flex flex-col h-screen sticky top-0 overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface)]"
     >
       {/* Top: App name / logo */}
-      <div className="flex items-center h-[52px] px-[var(--space-md)] border-b border-[var(--color-border)] flex-shrink-0">
-        <AnimatePresence initial={false}>
-          {!collapsed && (
+      <div className="flex items-center h-[52px] px-[var(--space-md)] border-b border-[var(--color-border)] flex-shrink-0 overflow-hidden">
+        <AnimatePresence initial={false} mode="wait">
+          {collapsed ? (
+            <motion.span
+              key="monogram"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+              className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--color-text)] select-none w-full flex justify-center"
+              aria-hidden="true"
+            >
+              Q
+            </motion.span>
+          ) : (
             <motion.span
               key="wordmark"
               initial={{ opacity: 0, x: -6 }}
@@ -68,14 +76,6 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
             </motion.span>
           )}
         </AnimatePresence>
-        {collapsed && (
-          <span
-            className="font-[family-name:var(--font-display)] text-[14px] font-semibold leading-none text-[var(--color-text)] select-none"
-            aria-hidden="true"
-          >
-            Q
-          </span>
-        )}
       </div>
 
       {/* Nav items */}
@@ -109,7 +109,7 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
                   .filter(Boolean)
                   .join(" ")}
               >
-                {/* Icon — accent color when active, muted otherwise (inherited) */}
+                {/* Icon */}
                 <span
                   className={[
                     "flex-shrink-0 flex items-center justify-center w-[16px] h-[16px] transition-colors duration-150 ease-out",
@@ -178,6 +178,6 @@ export function Sidebar({ items: _items }: { items?: NavItem[] }) {
           </AnimatePresence>
         </button>
       </div>
-    </nav>
+    </motion.nav>
   );
 }
