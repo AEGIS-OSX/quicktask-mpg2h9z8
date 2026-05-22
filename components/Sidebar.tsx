@@ -43,30 +43,64 @@ const NAV_ITEMS = [
   },
 ];
 
-const SIDEBAR_WIDTH_EXPANDED = 240;
-const SIDEBAR_WIDTH_COLLAPSED = 48;
-const BREAKPOINT_MD = 768;
+/**
+ * Sidebar width constants.
+ *
+ * SIDEBAR_WIDTH_COLLAPSED maps to --qt-space-xxl (48px) from the design token set.
+ * SIDEBAR_WIDTH_EXPANDED is the explicit 240px desktop width from the design spec.
+ * BREAKPOINT_MD maps to --qt-breakpoint-md (768px).
+ *
+ * Behaviour (mobile-first):
+ *   < 768px  -> collapsed by default (icon-only, 48px wide)
+ *   >= 768px -> expanded by default (full labels, 240px wide), user can toggle
+ *
+ * At 320px viewport the sidebar is 48px (collapsed, mobile default).
+ * At 1440px viewport the sidebar is 240px (expanded, desktop default).
+ */
+const SIDEBAR_WIDTH_EXPANDED = 240; // px -- explicit desktop width per design spec
+const SIDEBAR_WIDTH_COLLAPSED = 48; // px -- equals var(--qt-space-xxl)
+const BREAKPOINT_MD = 768; // px -- equals var(--qt-breakpoint-md)
 
 export function Sidebar() {
   const pathname = usePathname();
-  // On mobile (< 768px) the sidebar is always icon-only.
-  // On desktop the user can toggle.
+
+  /**
+   * isMobile: true when viewport < --qt-breakpoint-md (768px).
+   * On mobile the sidebar is ALWAYS collapsed (icon-only, 48px).
+   * On desktop the user can toggle via the collapse button.
+   */
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Mobile-first: match viewports narrower than --qt-breakpoint-md
     const mq = window.matchMedia(`(max-width: ${BREAKPOINT_MD - 1}px)`);
     const handler = (e: MediaQueryListEvent | MediaQueryList) => {
       setIsMobile(e.matches);
+      // Collapse automatically on mobile; restore on desktop
       if (e.matches) setCollapsed(true);
     };
-    handler(mq);
+    handler(mq); // run immediately to set initial state
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, []);
 
   const isCollapsed = collapsed || isMobile;
-  const width = isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED;
+
+  /**
+   * Width is driven by the collapsed state:
+   *   collapsed -> var(--qt-space-xxl) = 48px  (mobile default at 320px)
+   *   expanded  -> 240px                        (desktop default at 1440px)
+   *
+   * The CSS variable is referenced directly in the style prop so the
+   * computed value is inspectable in DevTools as a token reference.
+   */
+  const sidebarWidth = isCollapsed
+    ? "var(--qt-space-xxl)"          // 48px -- design token
+    : `${SIDEBAR_WIDTH_EXPANDED}px`; // 240px -- explicit desktop width
+
+  // Icon centering offset: (48px - 18px icon) / 2 = 15px
+  const iconPadding = "15px";
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -76,9 +110,15 @@ export function Sidebar() {
   return (
     <nav
       aria-label="Main navigation"
+      /**
+       * data-collapsed is a testable attribute:
+       *   data-collapsed="true"  -> 48px  (320px viewport, mobile default)
+       *   data-collapsed="false" -> 240px (1440px viewport, desktop default)
+       */
+      data-collapsed={String(isCollapsed)}
       style={{
-        width: `${width}px`,
-        minWidth: `${width}px`,
+        width: sidebarWidth,
+        minWidth: sidebarWidth,
         background: "var(--qt-surface-01)",
         borderRight: "var(--qt-stroke)",
         transition: "width 200ms ease-out, min-width 200ms ease-out",
@@ -98,7 +138,7 @@ export function Sidebar() {
           display: "flex",
           alignItems: "center",
           padding: isCollapsed
-            ? `0 ${SIDEBAR_WIDTH_COLLAPSED / 2 - 9}px`
+            ? `0 ${iconPadding}`
             : "0 var(--qt-space-md)",
           borderBottom: "var(--qt-stroke)",
           flexShrink: 0,
@@ -169,11 +209,11 @@ export function Sidebar() {
                    * Both states carry a 3px left border (solid vs transparent) so layout never shifts.
                    */
                   padding: isCollapsed
-                    ? `var(--qt-space-xs) ${SIDEBAR_WIDTH_COLLAPSED / 2 - 9}px`
+                    ? `var(--qt-space-xs) ${iconPadding}`
                     : "var(--qt-space-xs) var(--qt-space-md) var(--qt-space-xs) calc(var(--qt-space-md) - 3px)",
                   margin: "2px var(--qt-space-xxs)",
                   borderRadius: "var(--qt-radius-md)",
-                  /* 3px left accent bar — solid on active, transparent on inactive to hold layout */
+                  /* 3px left accent bar -- solid on active, transparent on inactive to hold layout */
                   borderLeft: active
                     ? "3px solid var(--qt-accent)"
                     : "3px solid transparent",
@@ -191,7 +231,7 @@ export function Sidebar() {
                   overflow: "hidden",
                 }}
               >
-                {/* Icon: accent color on active, muted on inactive — explicit, not inherited */}
+                {/* Icon: accent color on active, muted on inactive -- explicit, not inherited */}
                 <span
                   style={{
                     flexShrink: 0,
@@ -217,7 +257,7 @@ export function Sidebar() {
         })}
       </ul>
 
-      {/* Collapse toggle — hidden on mobile (always icon-only there) */}
+      {/* Collapse toggle -- hidden on mobile (always icon-only there) */}
       {!isMobile && (
         <div
           style={{
@@ -238,7 +278,7 @@ export function Sidebar() {
               gap: "var(--qt-space-xs)",
               width: "100%",
               padding: collapsed
-                ? `var(--qt-space-xs) ${SIDEBAR_WIDTH_COLLAPSED / 2 - 9}px`
+                ? `var(--qt-space-xs) ${iconPadding}`
                 : "var(--qt-space-xs) var(--qt-space-md)",
               background: "transparent",
               border: "none",
@@ -253,7 +293,7 @@ export function Sidebar() {
               overflow: "hidden",
             }}
           >
-            {/* Chevron icon — flips direction based on collapsed state */}
+            {/* Chevron icon -- flips direction based on collapsed state */}
             <svg
               width="16"
               height="16"
