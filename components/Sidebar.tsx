@@ -163,24 +163,41 @@ export function Sidebar() {
                   display: "flex",
                   alignItems: "center",
                   gap: "var(--qt-space-xs)",
+                  /*
+                   * Left padding is reduced by 3px to compensate for the 3px left border,
+                   * keeping the icon at a consistent horizontal position whether active or not.
+                   * Both states carry a 3px left border (solid vs transparent) so layout never shifts.
+                   */
                   padding: isCollapsed
                     ? `var(--qt-space-xs) ${SIDEBAR_WIDTH_COLLAPSED / 2 - 9}px`
-                    : "var(--qt-space-xs) var(--qt-space-md)",
+                    : "var(--qt-space-xs) var(--qt-space-md) var(--qt-space-xs) calc(var(--qt-space-md) - 3px)",
                   margin: "2px var(--qt-space-xxs)",
                   borderRadius: "var(--qt-radius-md)",
+                  /* 3px left accent bar — solid on active, transparent on inactive to hold layout */
+                  borderLeft: active
+                    ? "3px solid var(--qt-accent)"
+                    : "3px solid transparent",
                   textDecoration: "none",
                   fontFamily: "var(--font-ui)",
                   fontSize: "var(--qt-type-body-size)",
                   lineHeight: "var(--qt-type-body-line)",
                   fontWeight: active ? 600 : 400,
+                  /* Label color: primary on active, muted on inactive */
                   color: active ? "var(--qt-text-primary)" : "var(--qt-text-muted)",
                   background: active ? "var(--qt-bg-00)" : "transparent",
-                  transition: "background 150ms ease-out, color 150ms ease-out",
+                  transition:
+                    "background 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                 }}
               >
-                <span style={{ flexShrink: 0, color: active ? "var(--qt-accent)" : "currentColor" }}>
+                {/* Icon: accent color on active, muted on inactive — explicit, not inherited */}
+                <span
+                  style={{
+                    flexShrink: 0,
+                    color: active ? "var(--qt-accent)" : "var(--qt-text-muted)",
+                  }}
+                >
                   {item.icon}
                 </span>
                 {!isCollapsed && (
